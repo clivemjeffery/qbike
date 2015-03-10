@@ -203,12 +203,12 @@ class QBikeMainWindow(QtGui.QMainWindow):
 		self.segup.display(str(now_dt - seg.start_time).split('.',2)[0])
 		
 		# data and analysis LCDs:
-		self.hr_current.display(seg.last_heart)
-		self.hr_seg_avg.display(seg.avg_heart)
-		self.hr_seg_max.display(seg.max_heart)
-		self.hr_seg_min.display(seg.min_heart)
-		self.cadence.display(seg.last_cadence)
-		self.speed.display(seg.last_speed)
+		self.hr_current.display(seg.acc_heart.last_value)
+		self.hr_seg_avg.display(seg.acc_heart.mean())
+		self.hr_seg_max.display(seg.acc_heart.max_value)
+		self.hr_seg_min.display(seg.acc_heart.min_value)
+		self.cadence.display(seg.acc_cadence.last_value)
+		self.speed.display(seg.acc_speed.last_value)
 
 		# plot
 		if self.seg_updates % 60 == 0:

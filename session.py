@@ -3,6 +3,32 @@
 import array
 import datetime
 
+class Accumulator():
+	def __init__(self, lowlimit, highlimit):
+		self.last_value = 0
+		self.value = 0.0
+		self.max_value = lowlimit 
+		self.min_value = highlimit
+		self.n = 0
+		self.lowlimit = lowlimit
+		self.highlimit = highlimit
+		
+	def addValue(self, value):
+		self.last_value = value
+		if (value >= self.lowlimit) and (value <= self.highlimit):
+			self.value += value
+			self.n += 1
+			if (self.max_value < value):
+				self.max_value = value
+			if (self.min_value > value):
+				self.min_value = value
+		
+	def mean(self):
+		if self.n > 0:
+			return self.value / self.n
+		else:
+			return 0
+
 class Segment():
 
 	def __init__(self):	
@@ -19,55 +45,23 @@ class Segment():
 		self.heart = array.array('I') # heart rate (bpm)
 		self.cadence = array.array('I') # cadence (revs/m)
 		self.speed = array.array('f') # speed (mph or kph)
-		
-		# max and min data (initialised to trigger first set)
-		self.max_heart = 0 # remember they're unsigned so not -1
-		self.min_heart = 400
-		self.max_cadence = 0
-		self.min_cadence = 400
-		self.max_speed = -0.1
-		self.min_speed = 99.9
-			
-		# moving average data (cumulative values stored for efficiency)
-		self.avg_heart = 0.0
-		self.cum_heart = 0.0
-		self.avg_cadence = 0.0
-		self.cum_cadence = 0.0
-		self.avg_speed = 0.0
-		self.cum_speed = 0.0
+					
+		# mean averages of data (cumulative values stored for efficiency)
+		self.acc_heart = Accumulator(30, 250)
+		self.acc_cadence = Accumulator(0, 200)
+		self.acc_speed = Accumulator(-0.1,99.9)
 		
 	def addData(self, clocktime, heart, cadence=0, speed=0):
 		# store data
-		self.last_heart = heart
-		self.last_cadence = cadence
-		self.last_speed = speed
 		delta = clocktime - self.start_time
 		self.seconds.append(delta.total_seconds())
 		self.heart.append(heart)
 		self.cadence.append(cadence)
 		self.speed.append(speed)
-		# check for new min and max (within sensible limits for me)
-		if (self.max_heart < heart) and (heart < 250):
-			self.max_heart = heart
-		if (self.min_heart > heart) and (heart > 30):
-			self.min_heart = heart
-		if self.max_cadence < cadence:
-			self.max_cadence = cadence
-		if self.min_cadence > cadence:
-			self.min_cadence = cadence
-		if self.max_speed < speed:
-			self.max_speed = speed
-		if self.min_speed > speed:
-			self.min_speed = speed
 		# accumulate to efficiently calculate means
-		self.cum_heart += heart
-		self.cum_cadence += cadence
-		self.cum_speed += speed
-		# calculate mean averages
-		n = len(self.seconds) # can't be zero, appended at least once
-		self.avg_heart = self.cum_heart / n
-		self.avg_cadence = self.cum_cadence / n
-		self.avg_speed = self.cum_speed / n
+		self.acc_heart.addValue(heart)
+		self.acc_cadence.addValue(cadence)
+		self.acc_speed.addValue(speed)
 		
 class Session():
 	def __init__(self):
