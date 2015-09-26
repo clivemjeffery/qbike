@@ -21,7 +21,7 @@ class QBikeMainWindow(QtGui.QMainWindow):
 		self.setWindowTitle('QBike')
 		
 		# beginnings of athlete data
-		self.threshold_heart_rate = 170
+		self.threshold_heart_rate = 173
 		self.active_recovery = self.threshold_heart_rate * 0.68
 		self.endurance = self.threshold_heart_rate * 0.83
 		self.tempo = self.threshold_heart_rate * 0.94
@@ -81,13 +81,13 @@ class QBikeMainWindow(QtGui.QMainWindow):
 		# 2nd row: plots and max heart rates
 		## session plot
 		self.plot_session = Pg.PlotWidget(background=QtGui.QColor(30,30,60))
-		self.plot_session.setYRange(80, 200) # reasonable heart rate range
+		self.plot_session.setYRange(80, self.vo2max) # reasonable heart rate range
 		# thresholds
 		self.plotAllThresholdLines(self.plot_session)
 		ml.addWidget(self.plot_session, 1, 0, 3, 2)
 		## segment plot
 		self.plot_segment = Pg.PlotWidget(background=QtGui.QColor(10,10,30))
-		self.plot_segment.setYRange(80, 200) # reasonable heart rate range
+		self.plot_segment.setYRange(80, self.vo2max) # reasonable heart rate range
 		self.plot_segment.setXRange(0, 60)
 		self.plot_segment.getPlotItem().hideAxis('left')
 		
@@ -161,7 +161,7 @@ class QBikeMainWindow(QtGui.QMainWindow):
 		ml.addWidget(self.stopbutton, 6, 1)
 		
 	def addThresholdName(self, name, colour, ypos):
-		ti = Pg.TextItem(name, colour)
+		ti = Pg.TextItem(name + ' ' + str(ypos), colour)
 		self.plot_session.addItem(ti)
 		ti.setPos(0, ypos)
 		
@@ -227,13 +227,15 @@ class QBikeMainWindow(QtGui.QMainWindow):
 	def plotAllThresholdLines(self, plot):
 		self.addThresholdName('Active recovery', 'g', self.active_recovery)
 		self.addThresholdName('Endurance', 'c', self.endurance)
-		self.addThresholdName('Tempo', 'c', self.tempo)
-		self.addThresholdName('Threshold', 'c', self.threshold)
-		self.addThresholdName('VO2Max', 'c', self.vo2max)
+		self.addThresholdName('Tempo', 'y', self.tempo)
+		self.addThresholdName('FTHR', (255,165,0), self.threshold_heart_rate)
+		self.addThresholdName('Threshold', (255,165,0), self.threshold)
+		self.addThresholdName('VO2Max', 'r', self.vo2max)
 		self.plotThresholdLine(plot, self.active_recovery, 'g')
 		self.plotThresholdLine(plot, self.endurance, 'c')
 		self.plotThresholdLine(plot, self.tempo, 'y')
-		self.plotThresholdLine(plot, self.threshold, 'm')
+		self.plotThresholdLine(plot, self.threshold_heart_rate, Pg.mkPen(color=(255, 165, 0), style=QtCore.Qt.DashLine))
+		self.plotThresholdLine(plot, self.threshold, (255, 165, 0))
 		self.plotThresholdLine(plot, self.vo2max, 'r')
 		
 	def slotStart(self):
