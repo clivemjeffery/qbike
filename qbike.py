@@ -27,6 +27,16 @@ class QBikeMainWindow(QtGui.QMainWindow):
 		self.tempo = self.threshold_heart_rate * 0.94
 		self.threshold = self.threshold_heart_rate * 1.05
 		self.vo2max = self.threshold_heart_rate * 1.21
+
+		# CTS Zones (note overlaps)
+		self.cts_endurance_low = 87
+		self.cts_endurance_high = 158
+		self.cts_tempo_low = 153
+		self.cts_tempo_high = 157
+		self.cts_steady_low = 160
+		self.cts_steady_high = 164
+		self.cts_climb_high = 169
+		self.cts_power_low = 174
 		
 		# dummy central widget to contain layout manager
 		self.mainWidget = QtGui.QWidget(self)
@@ -219,12 +229,27 @@ class QBikeMainWindow(QtGui.QMainWindow):
 	def plotInactiveSegments(self):
 		if len(self.session.segments) > 1:
 			self.plot_session.getPlotItem().plot(self.session.getAllButActiveHeart(), clear=True)
-			self.plotAllThresholdLines(self.plot_session)
+			self.plotCTSThresholdLines(self.plot_session)
 
 	def plotThresholdLine(self, plot, ypos, colour):
 		plot.addItem(Pg.InfiniteLine(ypos, 0, colour))
 		
-	def plotAllThresholdLines(self, plot):
+	def plotCTSThresholdLines(self, plot):
+		self.addThresholdName('Endurance', 'g', self.cts_endurance_low)
+		self.addThresholdName('Tempo', 'c', self.cts_tempo_low)
+		self.addThresholdName('Steady State', 'm', self.cts_tempo_low)
+		self.addThresholdName('Climbing', 'y', self.cts_climb_high)
+		self.addThresholdName('Power', 'r', self.cts_power_low)
+		self.plotThresholdLine(plot, self.cts_endurance_low, 'g')
+		self.plotThresholdLine(plot, self.cts_endurance_high, 'g')
+		self.plotThresholdLine(plot, self.cts_tempo_low, 'c')
+		self.plotThresholdLine(plot, sefl.cts_tempo_high, 'c')
+		self.plotThresholdLine(plot, self.cts_steady_low, 'm')
+		self.plotThresholdLine(plot, self.cts_steady_high, 'm')
+		self.plotThresholdLine(plot, self.cts_climb_high, 'y')
+		self.plotThresholdLine(plot, self.cts_power_low, 'r')
+
+	def plotBritishCyclingThresholdLines(self, plot):
 		self.addThresholdName('Active recovery', 'g', self.active_recovery)
 		self.addThresholdName('Endurance', 'c', self.endurance)
 		self.addThresholdName('Tempo', 'y', self.tempo)
