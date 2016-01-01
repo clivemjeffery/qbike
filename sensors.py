@@ -6,7 +6,8 @@ class AntHrm(event.EventCallback):
 
     def __init__(self):
 		SERIAL = '/dev/ttyUSB0'
-		NETKEY = 'B9A521FBBD72C345'.decode('hex')
+		NETKEY = 'B9A521FBBD72C345'.decode('hex') # ANT+ KEY
+		##NETKEY = 'E8E4213B557A67C1'.decode('hex') # Public key
 		self.serial = SERIAL
 		self.netkey = NETKEY
 		self.antnode = None
