@@ -91,15 +91,15 @@ class QBikeMainWindow(QtGui.QMainWindow):
 		# 2nd row: plots and max heart rates
 		## session plot
 		self.plot_session = Pg.PlotWidget(background=QtGui.QColor(30,30,60))
-		self.plot_session.setYRange(80, self.vo2max) # reasonable heart rate range
+		self.plot_session.setYRange(140, 180) # reasonable heart rate range
 		# thresholds
-		self.plotAllThresholdLines(self.plot_session)
+		self.plotCTSThresholdLines(self.plot_session)
 		ml.addWidget(self.plot_session, 1, 0, 3, 2)
 		## segment plot
 		self.plot_segment = Pg.PlotWidget(background=QtGui.QColor(10,10,30))
-		self.plot_segment.setYRange(80, self.vo2max) # reasonable heart rate range
+		self.plot_segment.setYRange(140, 180) # reasonable heart rate range
 		self.plot_segment.setXRange(0, 60)
-		self.plot_segment.getPlotItem().hideAxis('left')
+		#self.plot_segment.getPlotItem().hideAxis('left')
 		
 		ml.addWidget(self.plot_segment, 1, 2, 3, 1)
 		# max heart rate in the segment
@@ -235,15 +235,15 @@ class QBikeMainWindow(QtGui.QMainWindow):
 		plot.addItem(Pg.InfiniteLine(ypos, 0, colour))
 		
 	def plotCTSThresholdLines(self, plot):
-		self.addThresholdName('Endurance', 'g', self.cts_endurance_low)
+		self.addThresholdName('Endurance', 'g', self.cts_endurance_high)
 		self.addThresholdName('Tempo', 'c', self.cts_tempo_low)
-		self.addThresholdName('Steady State', 'm', self.cts_tempo_low)
+		self.addThresholdName('Steady State', 'm', self.cts_steady_high)
 		self.addThresholdName('Climbing', 'y', self.cts_climb_high)
 		self.addThresholdName('Power', 'r', self.cts_power_low)
 		self.plotThresholdLine(plot, self.cts_endurance_low, 'g')
 		self.plotThresholdLine(plot, self.cts_endurance_high, 'g')
 		self.plotThresholdLine(plot, self.cts_tempo_low, 'c')
-		self.plotThresholdLine(plot, sefl.cts_tempo_high, 'c')
+		self.plotThresholdLine(plot, self.cts_tempo_high, 'c')
 		self.plotThresholdLine(plot, self.cts_steady_low, 'm')
 		self.plotThresholdLine(plot, self.cts_steady_high, 'm')
 		self.plotThresholdLine(plot, self.cts_climb_high, 'y')
