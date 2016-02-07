@@ -3,6 +3,7 @@ ANT+ Cycling Training on Raspberry Pi.
 
 This is a simple hobby project using python, inspired and kickstarted by
 * http://www.johannesbader.ch/2014/06/track-your-heartrate-on-raspberry-pi-with-ant/
+
 It requires the following useful libraries:
 * python-ant
 * PyQt4
