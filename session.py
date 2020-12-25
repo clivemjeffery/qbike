@@ -39,6 +39,9 @@ class Segment():
 		self.last_heart = 0
 		self.last_cadence = 0
 		self.last_speed = 0.0
+		
+		# calculated Distance
+		self.distance = 0.0
 
 		# basic data arrays
 		self.seconds = array.array('f') # seconds since start
@@ -58,6 +61,10 @@ class Segment():
 		self.heart.append(heart)
 		self.cadence.append(cadence)
 		self.speed.append(speed)
+		
+		# CHEAT: calculate distance from speed knowing updated 1/s in MPH
+		self.distance += speed / 60 / 60
+		
 		# accumulate to efficiently calculate means
 		self.acc_heart.addValue(heart)
 		self.acc_cadence.addValue(cadence)

@@ -33,7 +33,7 @@ class QBikeMainWindow(QtGui.QMainWindow):
 		self.vo2max = self.threshold_heart_rate * 1.21
 
 		# CTS Zones (note overlaps)
-		self.cts_endurance_low = 87
+		self.cts_endurance_low = 133
 		self.cts_endurance_high = 158
 		self.cts_tempo_low = 153
 		self.cts_tempo_high = 157
@@ -60,7 +60,7 @@ class QBikeMainWindow(QtGui.QMainWindow):
 		# Locals for last value read from node
 		self.node_hr = 0
 		self.node_cadence = 0.0
-		self.node_speed_mps = 0.0
+		self.node_speed_mph = 0.0
 		# ANT node and callback
 		self.node = Node(SerialDriver('/dev/ttyUSB0'), 'MoveStickNode')
 		self.node.enableRxScanMode()
@@ -79,7 +79,7 @@ class QBikeMainWindow(QtGui.QMainWindow):
 
 		ml = self.mainLayout
 
-		ml.setRowStretch(0, 1)	# row stretch factors to keep hr_current big
+		ml.setRowStretch(0, 1)	# row stretch factors to keep hr_inst big
 		ml.setRowStretch(1, 3)
 		ml.setRowStretch(2, 3)
 		ml.setRowStretch(3, 3)
@@ -90,6 +90,8 @@ class QBikeMainWindow(QtGui.QMainWindow):
 		ml.setColumnStretch(1, 1)
 		ml.setColumnStretch(2, 1)
 		ml.setColumnStretch(3, 1)
+		ml.setColumnStretch(4, 1)
+		ml.setColumnStretch(5, 1)
 
 		# From design in notebook
 		# Title row widgets
@@ -101,42 +103,56 @@ class QBikeMainWindow(QtGui.QMainWindow):
 		# 2nd row: plots and max heart rates
 		## session plot
 		self.plot_session = Pg.PlotWidget(background=QtGui.QColor(30,30,60))
-		self.plot_session.setYRange(60, 180) # reasonable heart rate range
-		self.plot_session.setXRange(0, 60)
+		# self.plot_session.setYRange(60, 180) # reasonable heart rate range
+		# self.plot_session.setXRange(0, 60)
 		# thresholds
 		self.plotCTSThresholdLines(self.plot_session)
-		ml.addWidget(self.plot_session, 1, 0, 3, 2)
-		## segment plot
-		self.plot_segment = Pg.PlotWidget(background=QtGui.QColor(10,10,30))
-		self.plot_segment.setYRange(60, 180) # reasonable heart rate range
-		self.plot_segment.setXRange(0, 60)
-		#self.plot_segment.getPlotItem().hideAxis('left')
-
-		ml.addWidget(self.plot_segment, 1, 2, 3, 1)
-		# max heart rate in the segment
+		ml.addWidget(self.plot_session, 1, 0, 3, 3)
+		
+		# max data displays: col 3, hr
 		self.hr_seg_max = QtGui.QLCDNumber()
 		self.hr_seg_max.setDigitCount(3)
-		self.hr_seg_max.display("HS")
 		ml.addWidget(self.hr_seg_max, 1, 3)
 		ml.addWidget(QtGui.QLabel("Max HR"), 1, 3, alignment=QtCore.Qt.AlignTop)
+		## col 4, speed
+		self.speed_seg_max = QtGui.QLCDNumber()
+		self.speed_seg_max.setDigitCount(4)
+		ml.addWidget(self.speed_seg_max, 1, 4)
+		ml.addWidget(QtGui.QLabel("Max MPH"), 1, 4, alignment=QtCore.Qt.AlignTop)
+		## col 5, cadence
+		self.cadence_seg_max = QtGui.QLCDNumber()
+		self.cadence_seg_max.setDigitCount(3)
+		ml.addWidget(self.cadence_seg_max, 1, 5)
+		ml.addWidget(QtGui.QLabel("Max Cadence"), 1, 5, alignment=QtCore.Qt.AlignTop)
 
 		# 3rd row: avg heart rates
 		# avg heart rate in the segment
 		self.hr_seg_avg = QtGui.QLCDNumber()
 		self.hr_seg_avg.setDigitCount(3)
-		self.hr_seg_avg.display("US")
 		ml.addWidget(self.hr_seg_avg, 2, 3)
 		ml.addWidget(QtGui.QLabel("Avg HR"), 2, 3, alignment=QtCore.Qt.AlignTop)
-
-		# 4th row: min heart rates
-		## avg heart rate in the segment
+		# col 4, speed
+		self.speed_seg_avg = QtGui.QLCDNumber()
+		self.speed_seg_avg.setDigitCount(3)
+		ml.addWidget(self.speed_seg_avg, 2, 4)
+		ml.addWidget(QtGui.QLabel("Avg MPH"), 2, 4, alignment=QtCore.Qt.AlignTop)
+		# col 5, cadence
+		self.cadence_seg_avg = QtGui.QLCDNumber()
+		self.cadence_seg_avg.setDigitCount(3)
+		ml.addWidget(self.cadence_seg_avg, 2, 5)
+		ml.addWidget(QtGui.QLabel("Avg Cadence"), 2, 5, alignment=QtCore.Qt.AlignTop)
+		
+		# 4th row: min heart rate and distance
 		self.hr_seg_min = QtGui.QLCDNumber()
 		self.hr_seg_min.setDigitCount(3)
-		self.hr_seg_min.display("LS")
 		ml.addWidget(self.hr_seg_min, 3, 3)
 		ml.addWidget(QtGui.QLabel("Min HR"), 3, 3, alignment=QtCore.Qt.AlignTop)
+		self.distance = QtGui.QLCDNumber()
+		self.distance.setDigitCount(4)
+		ml.addWidget(self.distance, 3, 4, 1, 2)
+		ml.addWidget(QtGui.QLabel("Distance"), 3, 4, alignment=QtCore.Qt.AlignTop)
 
-		# 5th row: timers, current heart rate
+		# 5th row: timers, instant displays
 		## session time - increasing
 		self.session_time = QtGui.QLCDNumber()
 		self.session_time.setDigitCount(5)
@@ -151,25 +167,21 @@ class QBikeMainWindow(QtGui.QMainWindow):
 		ml.addWidget(self.segup, 4, 1, 1, 2)
 		ml.addWidget(QtGui.QLabel("Segment Time"), 4, 1, alignment=QtCore.Qt.AlignTop)
 		## current heart rate
-		self.hr_current = QtGui.QLCDNumber()
-		self.hr_current.setDigitCount(3)
-		self.hr_current.display("0B")
-		ml.addWidget(self.hr_current, 4, 3)
+		self.hr_inst = QtGui.QLCDNumber()
+		self.hr_inst.setDigitCount(3)
+		self.hr_inst.display("0B")
+		ml.addWidget(self.hr_inst, 4, 3)
 		ml.addWidget(QtGui.QLabel("HR"), 4, 3, alignment=QtCore.Qt.AlignTop)
-
-		# 6th row - speed and cadence - coming whenever!
-		## speed
-		self.speed = QtGui.QLCDNumber()
-		self.speed.setDigitCount(4)
-		self.speed.display(25.4)
-		ml.addWidget(self.speed, 5, 1, 1, 2)
-		ml.addWidget(QtGui.QLabel("MPH"), 5, 1, alignment=QtCore.Qt.AlignTop)
-		## cadence
-		self.cadence = QtGui.QLCDNumber()
-		self.cadence.setDigitCount(3)
-		self.cadence.display("85")
-		ml.addWidget(self.cadence, 5, 3, 1, 2)
-		ml.addWidget(QtGui.QLabel("Cadence"), 5, 3, alignment=QtCore.Qt.AlignTop)
+		## col 4, speed
+		self.speed_inst = QtGui.QLCDNumber()
+		self.speed_inst.setDigitCount(4)
+		ml.addWidget(self.speed_inst, 4, 4)
+		ml.addWidget(QtGui.QLabel("MPH"), 4, 4, alignment=QtCore.Qt.AlignTop)
+		## col 5, cadence
+		self.cadence_inst = QtGui.QLCDNumber()
+		self.cadence_inst.setDigitCount(3)
+		ml.addWidget(self.cadence_inst, 4, 5)
+		ml.addWidget(QtGui.QLabel("Cadence"), 4, 5, alignment=QtCore.Qt.AlignTop)
 
 		# Bottom row: buttons
 		## start button
@@ -181,16 +193,14 @@ class QBikeMainWindow(QtGui.QMainWindow):
 		self.stopbutton.clicked.connect(self.slotStop)
 		ml.addWidget(self.stopbutton, 6, 1)
 
-	def addThresholdName(self, name, colour, ypos):
-		ti = Pg.TextItem(name + ' ' + str(ypos), colour)
-		self.plot_session.addItem(ti)
-		ti.setPos(0, ypos)
-
 	def timerFunction(self):
+		"""
 		self.session.thisSegment().addData(datetime.datetime.now(),
 										   self.node_hr,
 										   self.node_cadence,
-										   self.node_speed_mps)
+										   self.node_speed_mph)
+		"""
+		self.simulateData()
 		self.updateDisplay()
 
 	def readNodeMessage(self, msg):
@@ -199,7 +209,7 @@ class QBikeMainWindow(QtGui.QMainWindow):
 			self.node_hr = msg.heartrate
 		if isinstance(msg, SpeedAndCadenceProfileMessage):
 			self.node_cadence = msg.cadence
-			self.node_speed_mps = msg.speed(2096)
+			self.node_speed_mph = msg.speed(2096) * 2.2369
 
 	def simulateData(self):
 		heart =  int(math.floor(random.uniform(140, 180)))
@@ -218,26 +228,37 @@ class QBikeMainWindow(QtGui.QMainWindow):
 		# time:
 		self.segup.display(str(now_dt - seg.start_time).split('.',2)[0])
 
-		# data and analysis LCDs:
-		self.hr_current.display(seg.acc_heart.last_value)
+		# instant value LCDs:
+		self.hr_inst.display(seg.acc_heart.last_value)
+		self.speed_inst.display(seg.acc_speed.last_value)
+		self.cadence_inst.display(seg.acc_cadence.last_value)
+		self.distance.display(seg.distance)
+		
+		# average LCDs:
 		self.hr_seg_avg.display(seg.acc_heart.mean())
+		self.speed_seg_avg.display(seg.acc_speed.mean())
+		self.cadence_seg_avg.display(seg.acc_cadence.mean())
+		
+		# max LCDs:
 		self.hr_seg_max.display(seg.acc_heart.max_value)
+		self.speed_seg_max.display(seg.acc_speed.max_value)
+		self.cadence_seg_max.display(seg.acc_cadence.max_value)
+		
+		# min LCDs: (only heart rate)
 		self.hr_seg_min.display(seg.acc_heart.min_value)
-		self.cadence.display(seg.acc_cadence.last_value)
-		self.speed.display(seg.acc_speed.last_value * 2.2369)
+		
+		
 
 		# plot
-		if self.seg_updates % 60 == 0:
-			self.plot_segment.setXRange(0, int(self.seg_updates+60))
-		self.plot_segment.getPlotItem().plot(seg.heart, clear=True)
+		if self.seg_updates == 1: # first time
+			self.line_session = self.plot_session.plot(seg.heart)
+		else:
+			self.line_session.setData(seg.heart)
 
-		# threshold lines
-		# self.plotAllThresholdLines(self.plot_segment) -- too slow
-
-	def plotInactiveSegments(self):
-		if len(self.session.segments) > 1:
-			self.plot_session.getPlotItem().plot(self.session.getAllButActiveHeart(), clear=True)
-			self.plotCTSThresholdLines(self.plot_session)
+	def addThresholdName(self, name, colour, ypos):
+		ti = Pg.TextItem(name + ' ' + str(ypos), colour)
+		self.plot_session.addItem(ti)
+		ti.setPos(0, ypos)
 
 	def plotThresholdLine(self, plot, ypos, colour):
 		plot.addItem(Pg.InfiniteLine(ypos, 0, colour))
@@ -278,19 +299,10 @@ class QBikeMainWindow(QtGui.QMainWindow):
 		print ("Starting the node\n")
 		self.node.start(self.factory.parseMessage, self.antErrorCallback)
 
-
 	def slotStop(self):
 		# self.hr_sensor.stop()
 		print ("Stopping the node\n")
 		self.node.stop()
-
-	def keyPressEvent(self, e):
-		if e.key() == QtCore.Qt.Key_Space:
-			self.session.addSegment()
-			self.seg_updates = 0
-			self.plot_segment.setXRange(0,60)
-			self.plotInactiveSegments()
-
 
 	def closeEvent(self, event):
 		self.slotStop()
@@ -306,7 +318,7 @@ if __name__ == "__main__":
 	app = QBikeApp(sys.argv)
 	main = QBikeMainWindow()
 	main.move(25, 0)
-	main.resize(640,480)
+	main.resize(1024,768)
 	main.show()
 	rc = app.exec_()
 	exit(rc)
