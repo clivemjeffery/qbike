@@ -7,6 +7,7 @@ import time
 import datetime
 import math
 import random
+import argparse
 
 import session
 # import sensors
@@ -69,12 +70,6 @@ class QBikeMainWindow(QtGui.QMainWindow):
 		# training session data
 		self.session = session.Session()
 
-		# setup the application's own heartbeat once per second
-		self.seg_updates = 0 # counter for updates
-		timer = QtCore.QTimer(self)
-		timer.timeout.connect(self.timerFunction)
-		timer.start(1000)
-
 	def addWidgets(self):
 
 		ml = self.mainLayout
@@ -108,7 +103,7 @@ class QBikeMainWindow(QtGui.QMainWindow):
 		# thresholds
 		self.plotCTSThresholdLines(self.plot_session)
 		ml.addWidget(self.plot_session, 1, 0, 3, 3)
-		
+
 		# max data displays: col 3, hr
 		self.hr_seg_max = QtGui.QLCDNumber()
 		self.hr_seg_max.setDigitCount(3)
@@ -141,7 +136,7 @@ class QBikeMainWindow(QtGui.QMainWindow):
 		self.cadence_seg_avg.setDigitCount(3)
 		ml.addWidget(self.cadence_seg_avg, 2, 5)
 		ml.addWidget(QtGui.QLabel("Avg Cadence"), 2, 5, alignment=QtCore.Qt.AlignTop)
-		
+
 		# 4th row: min heart rate and distance
 		self.hr_seg_min = QtGui.QLCDNumber()
 		self.hr_seg_min.setDigitCount(3)
@@ -194,13 +189,12 @@ class QBikeMainWindow(QtGui.QMainWindow):
 		ml.addWidget(self.stopbutton, 6, 1)
 
 	def timerFunction(self):
-		"""
 		self.session.thisSegment().addData(datetime.datetime.now(),
 										   self.node_hr,
 										   self.node_cadence,
 										   self.node_speed_mph)
-		"""
-		self.simulateData()
+
+		# self.simulateData()
 		self.updateDisplay()
 
 	def readNodeMessage(self, msg):
@@ -233,21 +227,19 @@ class QBikeMainWindow(QtGui.QMainWindow):
 		self.speed_inst.display(seg.acc_speed.last_value)
 		self.cadence_inst.display(seg.acc_cadence.last_value)
 		self.distance.display(seg.distance)
-		
+
 		# average LCDs:
 		self.hr_seg_avg.display(seg.acc_heart.mean())
 		self.speed_seg_avg.display(seg.acc_speed.mean())
 		self.cadence_seg_avg.display(seg.acc_cadence.mean())
-		
+
 		# max LCDs:
 		self.hr_seg_max.display(seg.acc_heart.max_value)
 		self.speed_seg_max.display(seg.acc_speed.max_value)
 		self.cadence_seg_max.display(seg.acc_cadence.max_value)
-		
+
 		# min LCDs: (only heart rate)
 		self.hr_seg_min.display(seg.acc_heart.min_value)
-		
-		
 
 		# plot
 		if self.seg_updates == 1: # first time
@@ -296,12 +288,15 @@ class QBikeMainWindow(QtGui.QMainWindow):
 		raise e
 
 	def slotStart(self):
-		print ("Starting the node\n")
+		# setup the application's own heartbeat once per second
+		self.seg_updates = 0 # counter for updates
+		self.timer = QtCore.QTimer(self)
+		self.timer.timeout.connect(self.timerFunction)
+		self.timer.start(1000)
 		self.node.start(self.factory.parseMessage, self.antErrorCallback)
 
 	def slotStop(self):
-		# self.hr_sensor.stop()
-		print ("Stopping the node\n")
+		self.timer.stop()
 		self.node.stop()
 
 	def closeEvent(self, event):
