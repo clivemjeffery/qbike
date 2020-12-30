@@ -49,7 +49,7 @@ The current version of Python is 3.9.1 and I added that version during the updat
 
 ```
 $ sudo apt install -y python3.9
-$ sudo apt install -y python3.9-pip
+$ sudo apt install -y python3.9-pip # didn't work, use python to install pip as shown later
 $ sudo apt install -y python3.9-venv
 ```
 This installs the latest python, pip and venv alongside the system installed version. Venv is installed because using a virtual environment is the way to choose which one to use for a project.
@@ -136,7 +136,7 @@ $ source env9/bin/activate
 $ pip install pyqt5
 ```
 
-The apt package for PyQt5 did not install all dependencies at the time of us. A progrm to put up a window with a 'Hello World' title, failed, as follows:
+The apt package for PyQt5 did not install all dependencies when I first tried it. A program to put up a window with a 'Hello World' title, failed, as follows:
 
 ```
 $ python helloQt.py
@@ -148,6 +148,8 @@ After the message shown above, the process crashed and core dumped. The solution
 ```
 $ sudo apt install libxcb-xinerama0
 ```
+
+I repeated the key steps from above, on a newly installed Ubuntu 20.04, a few days later. The command to install `libxcb-xinerama0` reported that the library was already installed so the problem has likely been fixed in the PyQt dependencies.
 
 The HR/time plot in QBike is made with PyQtGraph and this now works with Qt5.
 
@@ -171,5 +173,12 @@ See `q5hrsc.py`
 
 ## Next steps
 
-* Add more 'columns' to the display for speed and cadence.
-* Read or calculate distance and display somewhere.
+* Distance calculation is crude and relies on the known update interval rather than being calculated from it. Improve by adding a settings feature to include: update frequency, wheel size, preferred units, etc.
+  * Add heart rate targets / zones or something to segments.
+* Convert distance units from m/s prior to display rather than on saving to segment.
+* Save and restore sessions and segments.
+* Save and restore heart rate zones.
+* Allow user to switch to a new segment
+* Auto switch to a new segment after time, distance or heart rate target met.
+* Save session graph (with session or separately as seems fit)
+* Try out the Strava API to create an activity from a session.
