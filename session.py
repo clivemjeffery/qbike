@@ -34,6 +34,14 @@ class Segment():
 	def __init__(self):
 		# start time
 		self.start_time = datetime.datetime.now()
+		
+		# Targets
+		self.hr_high = 0
+		self.hr_low = 0
+		self.warm_time = 0
+		self.work_time = 0
+		self.reco_time = 0
+		self.repeats = 1
 
 		# last data added
 		self.last_heart = 0

@@ -7,7 +7,7 @@ import array
 import time
 from datetime import datetime, timedelta
 
-from PyQt5 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, Qt
 import pyqtgraph as pg
 
 class MainWindow(QtGui.QMainWindow): 
@@ -16,14 +16,17 @@ class MainWindow(QtGui.QMainWindow):
 
 		# set the title 
 		self.setWindowTitle("Try Qt Prototyper") 
-		# self.setWindowOpacity(1)
+		#self.setWindowOpacity(0.3)
+		self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+		self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+		##self.setStyleSheet("background:tranparent;")
 		
 		# dummy central widget to contain layout manager
 		mw = QtGui.QWidget(self)
 		self.setCentralWidget(mw)
+		
 		layout = QtGui.QGridLayout(mw)
-		#self.setLayout(layout)
-
+		
 		## Create some widgets to be placed inside
 		btn = QtGui.QPushButton('Useless')
 		self.plot = pg.PlotWidget(axisItems = {'bottom': pg.DateAxisItem()})
